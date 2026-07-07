@@ -1,0 +1,43 @@
+{
+  "name": "Ibrahim's AI OS",
+  "short_name": "AI OS",
+  "description": "Personal AI Operating System — Pipeline, Clients, Content & Intelligence",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#06002A",
+  "theme_color": "#0b0085",
+  "orientation": "portrait-primary",
+  "lang": "en",
+  "categories": ["productivity", "business"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Pipeline",
+      "short_name": "Pipeline",
+      "description": "Open CRM Pipeline",
+      "url": "/?tab=pipeline",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Content Engine",
+      "short_name": "Content",
+      "description": "Open Content Engine",
+      "url": "/?tab=content",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b0085"/>
+      <stop offset="100%" stop-color="#3A10C8"/>
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="42" fill="url(#bg)"/>
+  <!-- Top bar of I -->
+  <rect x="52" y="38" width="88" height="22" rx="8" fill="white"/>
+  <!-- Stem of I -->
+  <rect x="79" y="70" width="34" height="52" rx="6" fill="white"/>
+  <!-- Bottom bar of I -->
+  <rect x="52" y="132" width="88" height="22" rx="8" fill="white"/>
+  <!-- Dot above — AI indicator -->
+  <circle cx="148" cy="44" r="12" fill="#00C896"/>
+</svg>
