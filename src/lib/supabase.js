@@ -6,10 +6,15 @@ import { createClient } from '@supabase/supabase-js'
 
 function getCredentials() {
   try {
-    const keys = JSON.parse(localStorage.getItem('ibrahim_api_keys') || '{}')
+    // Priority: Environment Variables -> LocalStorage -> Empty
+    const envUrl = import.meta.env.VITE_SUPABASE_URL;
+    const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    
+    const keys = JSON.parse(localStorage.getItem('ibrahim_api_keys') || '{}');
+    
     return {
-      url:     keys.supabaseUrl  || '',
-      anonKey: keys.supabaseKey  || '',
+      url:     envUrl || keys.supabaseUrl || '',
+      anonKey: envKey || keys.supabaseKey || '',
     }
   } catch {
     return { url: '', anonKey: '' }
