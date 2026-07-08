@@ -6,6 +6,7 @@ import {
   Repeat, Brain, Pin
 } from 'lucide-react'
 import { Planner as PlannerDB } from '../lib/db'
+import { isSupabaseReady } from '../lib/supabase'
 
 // ─── ACTIVITY TYPES ────────────────────────────────────────────────
 export const ACTIVITY_TYPES = [
