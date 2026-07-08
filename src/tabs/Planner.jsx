@@ -520,10 +520,16 @@ export default function Planner() {
   const weekDates = getWeekDates(weekOffset)
   const todayKey  = new Date().toISOString().split('T')[0]
 
-  useEffect(() => { saveTasks(tasks) }, [tasks])
-  useEffect(() => { saveRecurring(recurring) }, [recurring])
+  useEffect(() => { 
+    if (tasks && typeof tasks === 'object') saveTasks(tasks) 
+  }, [tasks])
+  
+  useEffect(() => { 
+    if (Array.isArray(recurring)) saveRecurring(recurring) 
+  }, [recurring])
 
-  // Poll for externally added tasks
+  // Poll for externally added tasks - removed to prevent infinite loops during blank screen debugging
+  /*
   useEffect(() => {
     const interval = setInterval(() => {
       const fresh = loadTasks()
@@ -531,6 +537,7 @@ export default function Planner() {
     }, 2000)
     return () => clearInterval(interval)
   }, [])
+  */
 
   const addTask = (dayKey, task) => {
     setTasks(prev => {
