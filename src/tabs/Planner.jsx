@@ -839,11 +839,11 @@ export default function Planner() {
                   })}
 
                   {/* Regular tasks */}
-                  {dayTasks.slice(0, 3).map(t => (
+                  {(dayTasks.slice(0, 3) || []).map(t => (
                     <TaskPill key={t.id} task={t} compact
                       onToggle={(e) => { e.stopPropagation(); toggleTask(day.key, t.id) }}
                       onDelete={(e) => { e.stopPropagation(); deleteTask(day.key, t.id) }} />
-                  ) || []}
+                  ))}
                   
                   {(dayTasks.length + dayRecurring.length) > 6 && (
                     <div style={{ fontSize:'9px', color:'var(--text-muted)', textAlign:'center', marginTop:'4px' }}>
