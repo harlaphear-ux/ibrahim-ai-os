@@ -515,6 +515,7 @@ export default function Planner() {
   const [showRecurringForm,    setShowRecurringForm]    = useState(false)
   const [showRecurringManager, setShowRecurringManager] = useState(false)
   const [showAKANBI,           setShowAKANBI]           = useState(false)
+  const [syncing,              setSyncing]              = useState(false)
 
   const weekDates = getWeekDates(weekOffset)
   const todayKey  = new Date().toISOString().split('T')[0]
@@ -616,6 +617,23 @@ export default function Planner() {
   const todayRecurring  = getRecurringForDay(recurring, todayKey)
   const totalDone       = Object.values(tasks).flat().filter(t => t.done).length
   const totalAll        = Object.values(tasks).flat().length
+  const isCloudReady    = isSupabaseReady()
+
+  const handleManualSync = async () => {
+    setSyncing(true)
+    try {
+      // Save triggers a push in the current db.js logic
+      PlannerDB.save(tasks)
+      // Also pull to ensure we have latest from other devices
+      await PlannerDB.pull()
+      setTasks(PlannerDB.load())
+      alert('Sync Complete!')
+    } catch (e) {
+      alert('Sync Failed: ' + e.message)
+    } finally {
+      setSyncing(false)
+    }
+  }
 
   // Helper for rendering a day's content
   const renderDayContent = (dayKey, isStandalone = false) => {
@@ -741,6 +759,10 @@ export default function Planner() {
           </button>
           <button className="btn btn-primary btn-sm" onClick={() => setShowAKANBI(true)} style={{ background:'linear-gradient(135deg, #0b0085, #3A10C8)' }}>
             <Brain size={13} /> Plan with AKANBI
+          </button>
+          <button className="btn btn-secondary btn-sm" onClick={handleManualSync} disabled={syncing || !isCloudReady} style={{ display:'flex', alignItems:'center', gap:'6px', color: isCloudReady ? 'var(--blue)' : 'var(--text-muted)' }}>
+            <RefreshCw size={13} className={syncing ? 'animate-spin' : ''} /> 
+            {syncing ? 'Syncing...' : isCloudReady ? 'Sync Cloud' : 'Cloud Offline'}
           </button>
           <div className="pill-tabs" style={{ margin:0 }}>
             <button className={`pill-tab${view === 'today' ? ' active' : ''}`} onClick={() => setView('today')}>Today</button>
