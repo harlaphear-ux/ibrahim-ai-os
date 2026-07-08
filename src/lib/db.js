@@ -98,33 +98,49 @@ export const Clients = {
 /* ── PLANNER TASKS ──────────────────────────────────── */
 export const Planner = {
   load() {
-    return lsGet('ai_os_planner_tasks', {})
+    const data = lsGet('ai_os_planner_tasks', {})
+    return (data && typeof data === 'object' && !Array.isArray(data)) ? data : {}
   },
   save(obj) {
+    if (!obj || typeof obj !== 'object') return
     lsSet('ai_os_planner_tasks', obj)
     // Flatten date-keyed object into rows for Supabase
     const rows = []
     Object.entries(obj).forEach(([date, tasks]) => {
-      ;(tasks || []).forEach(t => rows.push({ ...t, date }))
+      if (Array.isArray(tasks)) {
+        tasks.forEach(t => {
+          if (t && typeof t === 'object') {
+            rows.push({ ...t, date })
+          }
+        })
+      }
     })
-    if (rows.length) pushToSupabase('planner_tasks', rows)
+    if (rows.length > 0) {
+      pushToSupabase('planner_tasks', rows)
+    }
   },
   async pull() {
     const sb = getSupabase()
     if (!sb) return null
     try {
-      const { data } = await sb.from('planner_tasks').select('*')
+      const { data, error } = await sb.from('planner_tasks').select('*')
+      if (error) throw error
       if (!data) return null
       // Re-group by date
       const grouped = {}
       data.forEach(t => {
         const d = t.date
-        if (!grouped[d]) grouped[d] = []
-        grouped[d].push(t)
+        if (d) {
+          if (!grouped[d]) grouped[d] = []
+          grouped[d].push(t)
+        }
       })
       lsSet('ai_os_planner_tasks', grouped)
       return grouped
-    } catch { return null }
+    } catch (e) {
+      console.warn('[DB] Planner pull failed:', e.message)
+      return null
+    }
   },
 }
 

@@ -613,10 +613,10 @@ export default function Planner() {
     })
   }
 
-  const todayTasks      = (tasks && tasks[todayKey]) || []
+  const todayTasks      = (tasks && typeof tasks === 'object' && tasks[todayKey]) || []
   const todayRecurring  = getRecurringForDay(recurring || [], todayKey)
-  const totalDone       = tasks ? Object.values(tasks).flat().filter(t => t.done).length : 0
-  const totalAll        = tasks ? Object.values(tasks).flat().length : 0
+  const totalDone       = (tasks && typeof tasks === 'object') ? Object.values(tasks).filter(Array.isArray).flat().filter(t => t && t.done).length : 0
+  const totalAll        = (tasks && typeof tasks === 'object') ? Object.values(tasks).filter(Array.isArray).flat().filter(t => t).length : 0
   const isCloudReady    = isSupabaseReady()
 
   const handleManualSync = async () => {
