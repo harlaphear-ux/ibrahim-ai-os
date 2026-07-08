@@ -135,8 +135,20 @@ export const Planner = {
           grouped[d].push(t)
         }
       })
-      lsSet('ai_os_planner_tasks', grouped)
-      return grouped
+      
+      // MERGE with local instead of overwrite
+      const local = lsGet('ai_os_planner_tasks', {})
+      const merged = { ...local }
+      Object.entries(grouped).forEach(([date, cloudTasks]) => {
+        const localTasks = merged[date] || []
+        // Add cloud tasks that aren't already in local (by id)
+        const localIds = new Set(localTasks.map(lt => lt.id))
+        const newFromCloud = cloudTasks.filter(ct => !localIds.has(ct.id))
+        merged[date] = [...localTasks, ...newFromCloud]
+      })
+      
+      lsSet('ai_os_planner_tasks', merged)
+      return merged
     } catch (e) {
       console.warn('[DB] Planner pull failed:', e.message)
       return null

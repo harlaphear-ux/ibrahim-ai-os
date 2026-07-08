@@ -626,6 +626,19 @@ export default function Planner() {
   const totalAll        = (tasks && typeof tasks === 'object') ? Object.values(tasks).filter(Array.isArray).flat().filter(t => t).length : 0
   const isCloudReady    = isSupabaseReady()
 
+  // Safety: If tasks is corrupted, provide a reset
+  if (!tasks || typeof tasks !== 'object' || Array.isArray(tasks)) {
+    return (
+      <div style={{ padding: '40px', textAlign: 'center' }}>
+        <h2>Planner needs a reset</h2>
+        <p>Something went wrong with the data. Click below to fix it.</p>
+        <button className="btn btn-primary" onClick={() => { localStorage.removeItem('ai_os_planner_tasks'); window.location.reload(); }}>
+          Reset Planner Data
+        </button>
+      </div>
+    )
+  }
+
   const handleManualSync = async () => {
     setSyncing(true)
     try {
