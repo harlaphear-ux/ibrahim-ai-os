@@ -613,10 +613,10 @@ export default function Planner() {
     })
   }
 
-  const todayTasks      = tasks[todayKey] || []
-  const todayRecurring  = getRecurringForDay(recurring, todayKey)
-  const totalDone       = Object.values(tasks).flat().filter(t => t.done).length
-  const totalAll        = Object.values(tasks).flat().length
+  const todayTasks      = (tasks && tasks[todayKey]) || []
+  const todayRecurring  = getRecurringForDay(recurring || [], todayKey)
+  const totalDone       = tasks ? Object.values(tasks).flat().filter(t => t.done).length : 0
+  const totalAll        = tasks ? Object.values(tasks).flat().length : 0
   const isCloudReady    = isSupabaseReady()
 
   const handleManualSync = async () => {
@@ -637,8 +637,8 @@ export default function Planner() {
 
   // Helper for rendering a day's content
   const renderDayContent = (dayKey, isStandalone = false) => {
-    const dayTasks      = tasks[dayKey] || []
-    const dayRecurring  = getRecurringForDay(recurring, dayKey)
+    const dayTasks      = (tasks && tasks[dayKey]) || []
+    const dayRecurring  = getRecurringForDay(recurring || [], dayKey)
     const doneTasks     = dayTasks.filter(t => t.done).length
     const doneRecurring = (recurringDone[dayKey] || []).length
     const totalDay      = dayTasks.length + dayRecurring.length
