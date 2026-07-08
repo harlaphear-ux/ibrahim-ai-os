@@ -509,6 +509,7 @@ export default function Planner() {
   const [recurringDone, setRecurringDone] = useState(loadRecurringDone)
   const [weekOffset,    setWeekOffset]    = useState(0)
   const [view,          setView]          = useState('week')
+  const [selectedDay,   setSelectedDay]   = useState(null)
   const [addingDay,     setAddingDay]     = useState(null)
   const [pickedType,    setPickedType]    = useState(null)
   const [showRecurringForm,    setShowRecurringForm]    = useState(false)
@@ -616,6 +617,93 @@ export default function Planner() {
   const totalDone       = Object.values(tasks).flat().filter(t => t.done).length
   const totalAll        = Object.values(tasks).flat().length
 
+  // Helper for rendering a day's content
+  const renderDayContent = (dayKey, isStandalone = false) => {
+    const dayTasks      = tasks[dayKey] || []
+    const dayRecurring  = getRecurringForDay(recurring, dayKey)
+    const doneTasks     = dayTasks.filter(t => t.done).length
+    const doneRecurring = (recurringDone[dayKey] || []).length
+    const totalDay      = dayTasks.length + dayRecurring.length
+    const doneDay       = doneTasks + doneRecurring
+    
+    const d = new Date(dayKey + 'T12:00:00')
+    const dayLabel = d.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' })
+
+    return (
+      <div className={isStandalone ? "" : "day-card-content"}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: isStandalone ? '24px' : '12px' }}>
+          {isStandalone && (
+            <button className="btn btn-secondary btn-sm" onClick={() => setSelectedDay(null)}>
+              ← Back to Week
+            </button>
+          )}
+          <div style={{ textAlign: isStandalone ? 'center' : 'left', flex: 1 }}>
+            <div style={{ fontSize: isStandalone ? '12px' : '9px', fontWeight:'700', color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.07em' }}>
+              {getDayName(dayKey)}
+            </div>
+            <div style={{ fontSize: isStandalone ? '32px' : '22px', fontWeight:'800', color: dayKey === todayKey ? 'var(--blue)' : 'var(--text-primary)', lineHeight:'1.1' }}>
+              {isStandalone ? dayLabel : d.getDate()}
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {totalDay > 0 && (
+              <span style={{ fontSize: isStandalone ? '12px' : '9px', fontWeight:'700', color: doneDay === totalDay ? '#00C896' : 'var(--text-muted)', background: doneDay === totalDay ? '#E6FFF8' : 'var(--border)', padding:'2px 8px', borderRadius:'10px' }}>
+                {doneDay}/{totalDay}
+              </span>
+            )}
+            {isStandalone && dayTasks.length > 0 && (
+              <button className="btn btn-ghost btn-xs" style={{ color: '#F43F5E' }} onClick={() => clearDay(dayKey)}>
+                Clear Day
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Recurring tasks */}
+        {dayRecurring.length > 0 && (
+          <div style={{ marginBottom:'12px' }}>
+            <div style={{ fontSize: isStandalone ? '12px' : '10px', fontWeight:'700', color:'#F59E0B', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:'8px', display:'flex', alignItems:'center', gap:'4px' }}>
+              <Pin size={isStandalone ? 12 : 10} /> Recurring
+            </div>
+            {dayRecurring.map(r => {
+              const isDone = (recurringDone[dayKey] || []).includes(r.id)
+              return (
+                <TaskPill key={`r-${r.id}-${dayKey}`} task={{ ...r, done: isDone }} compact={!isStandalone} isRecurring
+                  onToggle={() => toggleRecurringDone(dayKey, r.id)}
+                  onDelete={() => {}} />
+              )
+            })}
+            {dayTasks.length > 0 && <div style={{ borderTop:'1px solid var(--border)', margin:'12px 0' }} />}
+          </div>
+        )}
+
+        {/* Regular tasks */}
+        {dayTasks.length === 0 && dayRecurring.length === 0 ? (
+          <div className="empty-state" style={{ padding: isStandalone ? '60px 20px' : '20px' }}>
+            <div className="empty-icon" style={{ background:'var(--blue-light)', color:'var(--blue)', width: isStandalone ? '48px' : '32px', height: isStandalone ? '48px' : '32px' }}>
+              <Calendar size={isStandalone ? 24 : 16} />
+            </div>
+            <p className="empty-desc">No tasks scheduled for this day.</p>
+            <button className="btn btn-primary" style={{ marginTop:'12px' }} onClick={() => setAddingDay(dayKey)}>
+              <Plus size={14} /> Add Activity
+            </button>
+          </div>
+        ) : (
+          <div>
+            {dayTasks.map(t => (
+              <TaskPill key={t.id} task={t} compact={!isStandalone}
+                onToggle={() => toggleTask(dayKey, t.id)}
+                onDelete={() => deleteTask(dayKey, t.id)} />
+            ))}
+            <button className="btn btn-secondary btn-sm" style={{ marginTop:'12px', width: isStandalone ? 'auto' : '100%' }} onClick={() => setAddingDay(dayKey)}>
+              <Plus size={13} /> Add Activity
+            </button>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div>
       {/* Modals */}
@@ -681,59 +769,16 @@ export default function Planner() {
         </div>
       </div>
 
-      {view === 'today' ? (
+      {selectedDay ? (
+        <div style={{ maxWidth:'800px', margin:'0 auto' }}>
+          <div className="card" style={{ padding:'32px' }}>
+            {renderDayContent(selectedDay, true)}
+          </div>
+        </div>
+      ) : view === 'today' ? (
         <div style={{ maxWidth:'640px' }}>
-          <div className="card">
-            <div className="card-header">
-              <span className="card-title">Today — {new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' })}</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize:'12px', color:'var(--text-muted)' }}>
-                  {todayTasks.filter(t => t.done).length + (recurringDone[todayKey] || []).length}/{todayTasks.length + todayRecurring.length} done
-                </span>
-                {todayTasks.length > 0 && (
-                  <button className="btn btn-ghost btn-xs" style={{ color: '#F43F5E', padding: '2px 6px' }} onClick={() => clearDay(todayKey)}>
-                    Clear Day
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Recurring tasks for today */}
-            {todayRecurring.length > 0 && (
-              <div style={{ marginBottom:'8px' }}>
-                <div style={{ fontSize:'10px', fontWeight:'700', color:'#F59E0B', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:'6px', display:'flex', alignItems:'center', gap:'4px' }}>
-                  <Pin size={10} /> Recurring
-                </div>
-                {todayRecurring.map(r => {
-                  const isDone = (recurringDone[todayKey] || []).includes(r.id)
-                  return (
-                    <TaskPill key={`r-${r.id}`} task={{ ...r, done: isDone }} compact={false} isRecurring
-                      onToggle={() => toggleRecurringDone(todayKey, r.id)}
-                      onDelete={() => {}} />
-                  )
-                })}
-                {todayTasks.length > 0 && <div style={{ borderTop:'1px solid var(--border)', margin:'10px 0' }} />}
-              </div>
-            )}
-
-            {todayTasks.length === 0 && todayRecurring.length === 0 ? (
-              <div className="empty-state" style={{ padding:'24px' }}>
-                <div className="empty-icon" style={{ background:'var(--blue-light)', color:'var(--blue)' }}><Calendar size={22} /></div>
-                <p className="empty-desc">No tasks today. Hit the button to add your first move.</p>
-                <button className="btn btn-primary" style={{ marginTop:'10px' }} onClick={() => setAddingDay(todayKey)}>
-                  <Plus size={14} /> Add Activity
-                </button>
-              </div>
-            ) : (
-              <div>
-                {todayTasks.map(t => (
-                  <TaskPill key={t.id} task={t} onToggle={() => toggleTask(todayKey, t.id)} onDelete={() => deleteTask(todayKey, t.id)} />
-                ))}
-                <button className="btn btn-secondary btn-sm" style={{ marginTop:'8px' }} onClick={() => setAddingDay(todayKey)}>
-                  <Plus size={13} /> Add Activity
-                </button>
-              </div>
-            )}
+          <div className="card" style={{ padding:'20px' }}>
+            {renderDayContent(todayKey, false)}
           </div>
         </div>
       ) : (
@@ -760,11 +805,17 @@ export default function Planner() {
               const doneDay       = doneTasks + doneRecurring
 
               return (
-                <div key={day.key} className="day-col" style={{
-                  borderTop: day.isToday ? '3px solid var(--blue)' : '1px solid var(--border)',
-                  background: day.isToday ? 'var(--blue-light)' : 'var(--card)',
-                  borderRadius:'var(--radius-md)', padding:'12px', minHeight:'160px'
-                }}>
+                <div key={day.key} className="day-col" 
+                  onClick={() => setSelectedDay(day.key)}
+                  style={{
+                    borderTop: day.isToday ? '3px solid var(--blue)' : '1px solid var(--border)',
+                    background: day.isToday ? 'var(--blue-light)' : 'var(--card)',
+                    borderRadius:'var(--radius-md)', padding:'12px', minHeight:'160px',
+                    cursor: 'pointer', transition: 'transform 0.2s'
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                  onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                >
                   <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'8px' }}>
                     <div>
                       <div style={{ fontSize:'9px', fontWeight:'700', color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.07em' }}>{day.name}</div>
@@ -778,23 +829,29 @@ export default function Planner() {
                   </div>
 
                   {/* Recurring tasks for this day */}
-                  {dayRecurring.map(r => {
+                  {dayRecurring.slice(0, 3).map(r => {
                     const isDone = (recurringDone[day.key] || []).includes(r.id)
                     return (
                       <TaskPill key={`r-${r.id}-${day.key}`} task={{ ...r, done: isDone }} compact isRecurring
-                        onToggle={() => toggleRecurringDone(day.key, r.id)}
+                        onToggle={(e) => { e.stopPropagation(); toggleRecurringDone(day.key, r.id) }}
                         onDelete={() => {}} />
                     )
                   })}
 
                   {/* Regular tasks */}
-                  {dayTasks.map(t => (
+                  {dayTasks.slice(0, 3).map(t => (
                     <TaskPill key={t.id} task={t} compact
-                      onToggle={() => toggleTask(day.key, t.id)}
-                      onDelete={() => deleteTask(day.key, t.id)} />
-                  ))}
+                      onToggle={(e) => { e.stopPropagation(); toggleTask(day.key, t.id) }}
+                      onDelete={(e) => { e.stopPropagation(); deleteTask(day.key, t.id) }} />
+                  ) || []}
+                  
+                  {(dayTasks.length + dayRecurring.length) > 6 && (
+                    <div style={{ fontSize:'9px', color:'var(--text-muted)', textAlign:'center', marginTop:'4px' }}>
+                      + {(dayTasks.length + dayRecurring.length) - 6} more...
+                    </div>
+                  )}
 
-                  <button onClick={() => setAddingDay(day.key)}
+                  <button onClick={(e) => { e.stopPropagation(); setAddingDay(day.key) }}
                     style={{ marginTop:'6px', width:'100%', padding:'5px', background:'none', border:'1px dashed var(--border)', borderRadius:'6px', fontSize:'11px', color:'var(--text-muted)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:'4px', transition:'var(--transition)' }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor='var(--blue)'; e.currentTarget.style.color='var(--blue)' }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor='var(--border)'; e.currentTarget.style.color='var(--text-muted)' }}>
