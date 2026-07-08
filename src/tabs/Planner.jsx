@@ -437,9 +437,7 @@ function TaskPill({ task, onToggle, onDelete, compact, isRecurring }) {
       </div>
 
       {!isRecurring && (
-        <button onClick={onDelete} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--text-muted)', padding:'2px', flexShrink:0, opacity:0, transition:'opacity 0.15s' }}
-          onMouseEnter={e => e.currentTarget.style.opacity = 1}
-          onMouseLeave={e => e.currentTarget.style.opacity = 0}>
+        <button onClick={onDelete} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--text-muted)', padding:'2px', flexShrink:0, transition:'opacity 0.15s' }}>
           <Trash2 size={11} />
         </button>
       )}
@@ -556,6 +554,35 @@ export default function Planner() {
     })
   }
 
+  const clearDay = (dayKey) => {
+    if (!window.confirm(`Clear all tasks for ${dayKey}?`)) return
+    setTasks(prev => {
+      const updated = { ...prev, [dayKey]: [] }
+      saveTasks(updated)
+      return updated
+    })
+  }
+
+  const clearWeek = () => {
+    if (!window.confirm('Clear all tasks for this week?')) return
+    setTasks(prev => {
+      const updated = { ...prev }
+      weekDates.forEach(d => { updated[d.key] = [] })
+      saveTasks(updated)
+      return updated
+    })
+  }
+
+  const clearAll = () => {
+    if (!window.confirm('WIPE EVERYTHING? This cannot be undone.')) return
+    setTasks({})
+    saveTasks({})
+    setRecurring([])
+    saveRecurring([])
+    setRecurringDone({})
+    saveRecurringDone({})
+  }
+
   const addRecurring = (task) => {
     setRecurring(prev => {
       const updated = [...prev, task]
@@ -631,6 +658,9 @@ export default function Planner() {
             <button className={`pill-tab${view === 'today' ? ' active' : ''}`} onClick={() => setView('today')}>Today</button>
             <button className={`pill-tab${view === 'week' ? ' active' : ''}`} onClick={() => setView('week')}>Week</button>
           </div>
+          <button className="btn btn-ghost btn-sm" style={{ color: '#F43F5E' }} onClick={clearAll}>
+            <Trash2 size={13} /> Wipe All
+          </button>
         </div>
       </div>
 
@@ -656,9 +686,16 @@ export default function Planner() {
           <div className="card">
             <div className="card-header">
               <span className="card-title">Today — {new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' })}</span>
-              <span style={{ fontSize:'12px', color:'var(--text-muted)' }}>
-                {todayTasks.filter(t => t.done).length + (recurringDone[todayKey] || []).length}/{todayTasks.length + todayRecurring.length} done
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize:'12px', color:'var(--text-muted)' }}>
+                  {todayTasks.filter(t => t.done).length + (recurringDone[todayKey] || []).length}/{todayTasks.length + todayRecurring.length} done
+                </span>
+                {todayTasks.length > 0 && (
+                  <button className="btn btn-ghost btn-xs" style={{ color: '#F43F5E', padding: '2px 6px' }} onClick={() => clearDay(todayKey)}>
+                    Clear Day
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Recurring tasks for today */}
@@ -708,6 +745,9 @@ export default function Planner() {
             </span>
             <button className="btn btn-secondary btn-sm btn-icon" onClick={() => setWeekOffset(w => w + 1)}><ChevronRight size={14} /></button>
             {weekOffset !== 0 && <button className="btn btn-ghost btn-sm" onClick={() => setWeekOffset(0)}>Today</button>}
+            <button className="btn btn-ghost btn-sm" style={{ color: '#F43F5E', marginLeft: 'auto' }} onClick={clearWeek}>
+              Clear Week
+            </button>
           </div>
 
           <div className="week-grid">
