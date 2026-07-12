@@ -46,7 +46,9 @@ function getWeekDates(weekOffset = 0) {
 }
 
 function getDayName(dateKey) {
-  const d = new Date(dateKey + 'T12:00:00')
+  // Mobile-safe date parsing (YYYY-MM-DD)
+  const parts = dateKey.split('-')
+  const d = new Date(parts[0], parts[1] - 1, parts[2])
   return DAY_FULL[d.getDay()].slice(0, 3)
 }
 
@@ -665,7 +667,9 @@ export default function Planner() {
     const totalDay      = dayTasks.length + dayRecurring.length
     const doneDay       = doneTasks + doneRecurring
     
-    const d = new Date(dayKey + 'T12:00:00')
+    // Mobile-safe date parsing
+    const parts = dayKey.split('-')
+    const d = new Date(parts[0], parts[1] - 1, parts[2])
     const dayLabel = d.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' })
 
     return (
