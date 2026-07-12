@@ -658,9 +658,9 @@ export default function Planner() {
 
   // Helper for rendering a day's content
   const renderDayContent = (dayKey, isStandalone = false) => {
-    const dayTasks      = (tasks && tasks[dayKey]) || []
+    const dayTasks      = (tasks && typeof tasks === 'object' && tasks[dayKey]) || []
     const dayRecurring  = getRecurringForDay(recurring || [], dayKey)
-    const doneTasks     = dayTasks.filter(t => t.done).length
+    const doneTasks     = (dayTasks || []).filter(t => t && t.done).length
     const doneRecurring = (recurringDone[dayKey] || []).length
     const totalDay      = dayTasks.length + dayRecurring.length
     const doneDay       = doneTasks + doneRecurring
