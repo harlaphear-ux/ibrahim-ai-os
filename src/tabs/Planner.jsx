@@ -507,6 +507,23 @@ function RecurringManager({ recurring, onDelete, onClose }) {
 
 // ─── MAIN PLANNER ─────────────────────────────────────────────────
 export default function Planner() {
+  const [renderError, setRenderError] = useState(null)
+
+  // Move hooks inside a safe block is not possible, so we wrap the return
+  try {
+    return <PlannerInner />
+  } catch (e) {
+    return (
+      <div style={{ padding:'20px', color:'red' }}>
+        <h3>Planner Crash Detected</h3>
+        <pre style={{ fontSize:'10px' }}>{e.message}</pre>
+        <button onClick={() => { localStorage.clear(); window.location.reload(); }}>Full App Reset</button>
+      </div>
+    )
+  }
+}
+
+function PlannerInner() {
   const [tasks,         setTasks]         = useState(loadTasks)
   const [recurring,     setRecurring]     = useState(loadRecurring)
   const [recurringDone, setRecurringDone] = useState(loadRecurringDone)
