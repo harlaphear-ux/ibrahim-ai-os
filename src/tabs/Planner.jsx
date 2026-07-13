@@ -30,17 +30,28 @@ const RECURRING_DONE_KEY= 'ai_os_recurring_done'
 // ─── HELPERS ───────────────────────────────────────────────────────
 function getWeekDates(weekOffset = 0) {
   const now = new Date()
-  const day = now.getDay()
-  const monday = new Date(now)
-  monday.setDate(now.getDate() - (day === 0 ? 6 : day - 1) + weekOffset * 7)
+  // Ensure we have a clean date at midnight
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const day = today.getDay()
+  const monday = new Date(today)
+  monday.setDate(today.getDate() - (day === 0 ? 6 : day - 1) + weekOffset * 7)
+  
   return DAYS.map((name, i) => {
     const d = new Date(monday)
     d.setDate(monday.getDate() + i)
+    
+    // Manual ISO string to avoid potential timezone/mobile issues
+    const yyyy = d.getFullYear()
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const dd = String(d.getDate()).padStart(2, '0')
+    const key = `${yyyy}-${mm}-${dd}`
+
     return {
-      name, num: d.getDate(),
+      name, 
+      num: d.getDate(),
       month: d.toLocaleDateString('en-US', { month: 'short' }),
-      isToday: d.toDateString() === now.toDateString(),
-      key: d.toISOString().split('T')[0],
+      isToday: key === `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`,
+      key: key,
     }
   })
 }
