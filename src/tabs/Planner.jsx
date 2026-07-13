@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Plus, Trash2, ChevronLeft, ChevronRight, Check, Clock,
   UserPlus, MessageSquare, Zap, PenLine, Send, Users,
@@ -519,21 +519,37 @@ function RecurringManager({ recurring, onDelete, onClose }) {
 }
 
 // ─── MAIN PLANNER ─────────────────────────────────────────────────
-export default function Planner() {
-  const [renderError, setRenderError] = useState(null)
-
-  // Move hooks inside a safe block is not possible, so we wrap the return
-  try {
-    return <PlannerInner />
-  } catch (e) {
-    return (
-      <div style={{ padding:'20px', color:'red' }}>
-        <h3>Planner Crash Detected</h3>
-        <pre style={{ fontSize:'10px' }}>{e.message}</pre>
-        <button onClick={() => { localStorage.clear(); window.location.reload(); }}>Full App Reset</button>
-      </div>
-    )
+// Error Boundary Component
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
   }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding:'20px', color:'red', textAlign:'center' }}>
+          <h3>Planner Crash Detected</h3>
+          <p style={{ fontSize:'12px' }}>{this.state.error?.message}</p>
+          <button className="btn btn-primary" onClick={() => { localStorage.clear(); window.location.reload(); }}>
+            Full App Reset
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+export default function Planner() {
+  return (
+    <ErrorBoundary>
+      <PlannerInner />
+    </ErrorBoundary>
+  )
 }
 
 function PlannerInner() {
