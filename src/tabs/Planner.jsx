@@ -451,8 +451,10 @@ function TaskPill({ task, onToggle, onDelete, compact, isRecurring }) {
       </div>
 
       {!isRecurring && (
-        <button onClick={onDelete} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--text-muted)', padding:'2px', flexShrink:0, transition:'opacity 0.15s' }}>
-          <Trash2 size={11} />
+        <button onClick={onDelete} 
+          className="task-delete-btn"
+          style={{ background:'none', border:'none', cursor:'pointer', color:'#F43F5E', padding:'4px', flexShrink:0, opacity: 0.8 }}>
+          <Trash2 size={12} />
         </button>
       )}
     </div>
